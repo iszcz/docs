@@ -1,94 +1,143 @@
 ---
-title: 'Development'
-description: 'Preview changes locally to update your docs'
+mode: "custom"
 ---
 
-<Info>
-  **Prerequisites**:
-  - Node.js version 19 or higher
-  - A docs repository with a `docs.json` file
-</Info>
+# Get Result
 
-Follow these steps to install and run Mintlify on your operating system.
+> An endpoint for getting generation task result.
 
-<Steps>
-<Step title="Install the Mintlify CLI">
+## OpenAPI
 
-```bash
-npm i -g mint
+```yaml https://api.bfl.ai/openapi.json get /v1/get_result
+paths:
+  path: /v1/get_result
+  method: get
+  servers:
+    - url: https://api.bfl.ai
+      description: BFL API
+  request:
+    security: []
+    parameters:
+      path: {}
+      query:
+        id:
+          schema:
+            - type: string
+              required: true
+              title: Id
+      header: {}
+      cookie: {}
+    body: {}
+  response:
+    '200':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              id:
+                allOf:
+                  - type: string
+                    title: Id
+                    description: Task id for retrieving result
+              status:
+                allOf:
+                  - $ref: '#/components/schemas/StatusResponse'
+              result:
+                allOf:
+                  - anyOf:
+                      - {}
+                      - type: 'null'
+                    title: Result
+              progress:
+                allOf:
+                  - anyOf:
+                      - type: number
+                      - type: 'null'
+                    title: Progress
+              details:
+                allOf:
+                  - anyOf:
+                      - additionalProperties: true
+                        type: object
+                      - type: 'null'
+                    title: Details
+              preview:
+                allOf:
+                  - anyOf:
+                      - additionalProperties: true
+                        type: object
+                      - type: 'null'
+                    title: Preview
+            title: ResultResponse
+            refIdentifier: '#/components/schemas/ResultResponse'
+            requiredProperties:
+              - id
+              - status
+        examples:
+          example:
+            value:
+              id: <string>
+              status: Task not found
+              result: <any>
+              progress: 123
+              details: {}
+              preview: {}
+        description: Successful Response
+    '422':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              detail:
+                allOf:
+                  - items:
+                      $ref: '#/components/schemas/ValidationError'
+                    type: array
+                    title: Detail
+            title: HTTPValidationError
+            refIdentifier: '#/components/schemas/HTTPValidationError'
+        examples:
+          example:
+            value:
+              detail:
+                - loc:
+                    - <string>
+                  msg: <string>
+                  type: <string>
+        description: Validation Error
+  deprecated: false
+  type: path
+components:
+  schemas:
+    StatusResponse:
+      type: string
+      enum:
+        - Task not found
+        - Pending
+        - Request Moderated
+        - Content Moderated
+        - Ready
+        - Error
+      title: StatusResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError
 ```
-</Step>
-
-<Step title="Preview locally">
-
-Navigate to your docs directory where your `docs.json` file is located, and run the following command:
-
-```bash
-mint dev
-```
-
-A local preview of your documentation will be available at `http://localhost:3000`.
-
-</Step>
-</Steps>
-
-## Custom ports
-
-By default, Mintlify uses port 3000. You can customize the port Mintlify runs on by using the `--port` flag. For example, to run Mintlify on port 3333, use this command:
-
-```bash
-mint dev --port 3333
-```
-
-If you attempt to run Mintlify on a port that's already in use, it will use the next available port:
-
-```md
-Port 3000 is already in use. Trying 3001 instead.
-```
-
-## Mintlify versions
-
-Please note that each CLI release is associated with a specific version of Mintlify. If your local preview does not align with the production version, please update the CLI:
-
-```bash
-npm mint update
-```
-
-## Validating links
-
-The CLI can assist with validating links in your documentation. To identify any broken links, use the following command:
-
-```bash
-mint broken-links
-```
-
-## Deployment
-
-If the deployment is successful, you should see the following:
-
-<Frame>
-  <img src="/images/checks-passed.png" alt="Screenshot of a deployment confirmation message that says All checks have passed." style={{ borderRadius: '0.5rem' }} />
-</Frame>
-
-## Code formatting
-
-We suggest using extensions on your IDE to recognize and format MDX. If you're a VSCode user, consider the [MDX VSCode extension](https://marketplace.visualstudio.com/items?itemName=unifiedjs.vscode-mdx) for syntax highlighting, and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) for code formatting.
-
-## Troubleshooting
-
-<AccordionGroup>
-  <Accordion title='Error: Could not load the "sharp" module using the darwin-arm64 runtime'>
-
-    This may be due to an outdated version of node. Try the following:
-    1. Remove the currently-installed version of the CLI: `npm remove -g mint`
-    2. Upgrade to Node v19 or higher.
-    3. Reinstall the CLI: `npm i -g mint`
-  </Accordion>
-
-  <Accordion title="Issue: Encountering an unknown error">
-  
-    Solution: Go to the root of your device and delete the `~/.mintlify` folder. Then run `mint dev` again.
-  </Accordion>
-</AccordionGroup>
-
-Curious about what changed in the latest CLI version? Check out the [CLI changelog](https://www.npmjs.com/package/mintlify?activeTab=versions).
